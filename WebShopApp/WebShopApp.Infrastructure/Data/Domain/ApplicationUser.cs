@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace WebShopApp.Infrastructure.Data.Domain
 {
-    internal class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser
     {
         [Required]
         [MaxLength(30)]

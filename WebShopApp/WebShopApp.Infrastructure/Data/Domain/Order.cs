@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace WebShopApp.Infrastructure.Data.Domain
 {
-    internal class Order
+    public class Order
     {
         public int Id { get; set; }
 
