@@ -15,8 +15,10 @@ namespace WebShopApp.Infrastructure.Data.Domain
         [MaxLength(30)]
         public string ProductName { get; set; }
 
+
         [Required]
         [ForeignKey(nameof(Brand))]
+        public int BrandId { get; set; }
         public virtual Brand Brand { get; set; } = null!;
 
         [Required]
