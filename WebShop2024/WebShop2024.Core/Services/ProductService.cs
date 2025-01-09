@@ -3,10 +3,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WebShop2024.Core.Contracts;
+using WebShop2024.Infrastructure.Data;
+using WebShop2024.Infrastructure.Data.Entities;
 
 namespace WebShop2024.Core.Services
 {
-    internal class ProductService
+    public class ProductService : IProductService
     {
+        private readonly ApplicationDbContext _context;
+
+        public ProductService(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public bool Create(string name, int brandId, int categoryId, string picture, int quantity, decimal price, decimal discount)
+        {
+            Product item = new Product
+            {
+                ProductName = name,
+                Brand = _context.Brands.Find(brandId),
+                Category = _context.Categories.Find(categoryId),
+                Picture = picture,
+                Quantity = quantity,
+                Price = price,
+                Discount = discount
+            };
+
+            _context.Products.Add(item);
+            return _context.SaveChanges() != 0; 
+        }
     }
 }
