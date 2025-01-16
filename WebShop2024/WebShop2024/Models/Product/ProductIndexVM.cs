@@ -24,6 +24,6 @@ namespace WebShop2024.Models.Product
         [Display(Name="Price")]
         public decimal Price { get; set; }
         [Display(Name ="Discount")]
-        public string Discount { get; set; }
+        public decimal Discount { get; set; }
     }
 }
