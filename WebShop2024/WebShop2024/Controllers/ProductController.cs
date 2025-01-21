@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using WebShop2024.Core.Contracts;
@@ -9,6 +10,7 @@ using WebShop2024.Models.Product;
 
 namespace WebShop2024.Controllers
 {
+    [Authorize(Roles = "Administrator")]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;
@@ -21,6 +23,8 @@ namespace WebShop2024.Controllers
             this._categoryService = categoryService;
             this._brandService = brandService;
         }
+
+        [AllowAnonymous]
         public ActionResult Index(string searchStringCategoryName, string searchStringBrandName)
         {
             List<ProductIndexVM> products = _productService.GetProducts(searchStringCategoryName, searchStringBrandName)
@@ -41,6 +45,7 @@ namespace WebShop2024.Controllers
         }
 
         // GET: ProductController/Details/5
+        [AllowAnonymous]
         public ActionResult Details(int id)
         {
             Product item = _productService.GetProductById(id);
