@@ -1,30 +1,40 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using System.Xml.Linq;
+﻿using System.ComponentModel.DataAnnotations;
+
+using WebShop2024.Models.Brand;
+using WebShop2024.Models.Category;
 
 namespace WebShop2024.Models.Product
 {
-    public class ProductDetailsVM : Controller
+    public class ProductDetailsVM
     {
+        
         [Key]
         public int Id { get; set; }
 
+
         [Display(Name = "Product Name")]
         public string ProductName { get; set; } = null!;
-        public int BrandId { get; set; }
 
+        public int BrandId { get; set; }
         [Display(Name = "Brand")]
-        public string BrandName { get; set; }
+        public string BrandName { get; set; } = null!;
+
         public int CategoryId { get; set; }
-        [Display(Name = "CategoryId")]
+        [Display(Name = "Category")]
         public string CategoryName { get; set; } = null!;
+
         [Display(Name = "Picture")]
         public string Picture { get; set; } = null!;
+
+
         [Display(Name = "Quantity")]
         public int Quantity { get; set; }
+
         [Display(Name = "Price")]
         public decimal Price { get; set; }
+
         [Display(Name = "Discount")]
         public decimal Discount { get; set; }
+    
     }
 }

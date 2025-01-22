@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Query.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using WebShop2024.Core.Contracts;
 using WebShop2024.Infrastructure.Data;
 using WebShop2024.Infrastructure.Data.Entities;
@@ -21,6 +21,7 @@ namespace WebShop2024.Core.Services
 
         public bool Create(string name, int brandId, int categoryId, string picture, int quantity, decimal price, decimal discount)
         {
+            // Creating a new Product object
             Product item = new Product
             {
                 ProductName = name,
@@ -32,13 +33,14 @@ namespace WebShop2024.Core.Services
                 Discount = discount
             };
 
+            // Adding the product to the Products DbSet and saving changes to the database
             _context.Products.Add(item);
-            return _context.SaveChanges() != 0; 
+            return _context.SaveChanges() != 0;
 
+           
 
         }
-
-        public Product GetProductById (int productId) 
+        public Product GetProductById(int productId)
         {
             return _context.Products.Find(productId);
         }
@@ -48,55 +50,55 @@ namespace WebShop2024.Core.Services
             List<Product> products = _context.Products.ToList();
             return products;
         }
-
-        public List<Product> GetProducts(string searchStringCategoryName, string searchStringBrandName) 
+        public List<Product> GetProducts(string searchStringCategoryName, string searchStringBrandName)
         {
-            List<Product> products = _context.Products.ToList();
+            var products = _context.Products.AsQueryable();
 
-            if(!String.IsNullOrEmpty(searchStringCategoryName) && !String.IsNullOrEmpty(searchStringBrandName)) 
+            if (!string.IsNullOrEmpty(searchStringCategoryName) && !string.IsNullOrEmpty(searchStringBrandName))
             {
-                products = products.Where(x => x.Category.CategoryName.ToLower().Contains
-                (searchStringCategoryName.ToLower())
-                && x.Brand.BrandName.ToLower().Contains(searchStringBrandName.ToLower())).ToList(); 
+                products = products.Where(x => x.Category.CategoryName.ToLower().Contains(searchStringCategoryName.ToLower()) ||
+                                                x.Brand.BrandName.ToLower().Contains(searchStringBrandName.ToLower()));
             }
-            else if(!String.IsNullOrEmpty(searchStringCategoryName))
+            else if (!string.IsNullOrEmpty(searchStringCategoryName))
             {
-                products = products.Where(x => x.Category.CategoryName.ToLower().Contains(searchStringCategoryName.ToLower())).ToList() ;
+                products = products.Where(x => x.Category.CategoryName.ToLower().Contains(searchStringCategoryName.ToLower()));
             }
-            else if(!String.IsNullOrEmpty (searchStringBrandName)) 
+            else if (!string.IsNullOrEmpty(searchStringBrandName))
             {
-                products = products.Where(x => x.Brand.BrandName.ToLower().Contains(searchStringBrandName.ToLower())).ToList();
+                products = products.Where(x => x.Brand.BrandName.ToLower().Contains(searchStringBrandName.ToLower()));
             }
-            return products;
+
+            return products.ToList();
         }
+
         public bool RemoveById(int productId)
         {
             var product = GetProductById(productId);
-            if(product == default(Product)) 
-            {
+            if (product == null) 
                 return false;
-            }
-            _context.Remove(product);
-            return _context.SaveChanges() !=0;
-        }
 
+            _context.Products.Remove(product);  
+            return _context.SaveChanges() != 0;  
+        }
         public bool Update(int productId, string name, int brandId, int categoryId, string picture, int quantity, decimal price, decimal discount)
         {
             var product = GetProductById(productId);
-            if(product == default(Product))
-            {
+            if (product == null) // Use `null` for checking if the product was not found
                 return false;
-            }
-            product.ProductName = name;
 
-            product.Brand = _context.Brands.Find(brandId);
-            product.Category = _context.Categories.Find(categoryId);
+            product.ProductName = name;
+            product.BrandId = brandId; // Assuming BrandId is the correct property name
+            product.CategoryId = categoryId; // Assuming CategoryId is the correct property name
             product.Picture = picture;
             product.Quantity = quantity;
             product.Price = price;
             product.Discount = discount;
+
             _context.Update(product);
             return _context.SaveChanges() != 0;
         }
+
+
     }
+
 }

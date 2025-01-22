@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
+
 using WebShop2024.Core.Contracts;
 using WebShop2024.Infrastructure.Data.Entities;
 using WebShop2024.Models.Brand;
@@ -10,148 +12,195 @@ using WebShop2024.Models.Product;
 
 namespace WebShop2024.Controllers
 {
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles ="Administrator")]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly IBrandService _brandService;
-        // GET: ProductController
+
         public ProductController(IProductService productService, ICategoryService categoryService, IBrandService brandService)
         {
-            this._productService = productService;
-            this._categoryService = categoryService;
-            this._brandService = brandService;
+            _productService = productService;
+            _categoryService = categoryService;
+            _brandService = brandService;
         }
 
+
         [AllowAnonymous]
+        // GET: ProductController
         public ActionResult Index(string searchStringCategoryName, string searchStringBrandName)
         {
+            
             List<ProductIndexVM> products = _productService.GetProducts(searchStringCategoryName, searchStringBrandName)
-            .Select(product => new ProductIndexVM
-            {
-                Id = product.Id,
-                ProductName = product.ProductName,
-                BrandId = product.BrandId,
-                BrandName = product.Brand.BrandName,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category.CategoryName,
-                Picture = product.Picture,
-                Quantity = product.Quantity,
-                Price = product.Price,
-                Discount = product.Discount
-            }).ToList();
-            return this.View(products);
+                .Select(product => new ProductIndexVM
+                {
+                    Id = product.Id,
+                    ProductName = product.ProductName,
+                    BrandId = product.BrandId,
+                    BrandName = product.Brand.BrandName,
+                    CategoryId = product.CategoryId,
+                    CategoryName = product.Category.CategoryName,
+                    Picture = product.Picture,
+                    Quantity = product.Quantity,
+                    Price = product.Price,
+                    Discount = product.Discount
+                })
+                .ToList();
+
+          
+            return View(products);
         }
 
-        // GET: ProductController/Details/5
         [AllowAnonymous]
+        // GET: ProductController/Details/5
         public ActionResult Details(int id)
         {
-            Product item = _productService.GetProductById(id);
-            if(item == null)
-            {
-                return NotFound();
+            
+
+                Product item = _productService.GetProductById(id);
+
+
+                if (item == null)
+                {
+                    return NotFound();
+                }
+
+
+                ProductDetailsVM product = new ProductDetailsVM()
+                {
+                    Id = item.Id,
+                    ProductName = item.ProductName,
+                    BrandId = item.BrandId,
+                    BrandName= item.Brand.BrandName,
+                    CategoryId = item.CategoryId,
+                    CategoryName = item.Category.CategoryName,
+                    Picture = item.Picture,
+                    Quantity = item.Quantity,
+                    Price = item.Price,
+                    Discount = item.Discount
+                };
+            return View(product);
             }
-            ProductDetailsVM product = new ProductDetailsVM()
-            {
-                Id = item.Id,
-                ProductName = item.ProductName,
-                BrandId = item.BrandId,
-                BrandName = item.Brand.BrandName,
-                CategoryId = item.CategoryId,
-                CategoryName = item.Category.CategoryName,
-                Picture = item.Picture,
-                Quantity = item.Quantity,
-                Price = item.Price,
-                Discount = item.Discount
-            };
-            return View();
-        }
 
         // GET: ProductController/Create
         public ActionResult Create()
         {
-            return View();
+            var product = new ProductCreateVM();
+            product.Brands = _brandService.GetBrands()
+                .Select(x => new BrandPairVM()
+                {
+                    Id = x.Id,
+                    Name = x.BrandName
+
+                }).ToList();
+            product.Categories = _categoryService.GetCategories()
+                .Select(x=> new CategoryPairVM()
+                { 
+                    Id=x.Id,
+                    Name=x.CategoryName
+
+                }).ToList();
+            return View(product);
         }
 
         // POST: ProductController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create([FromForm] ProductCreateVM product)
         {
-            try
+            if (ModelState.IsValid)
             {
+                var createdId = _productService.Create(
+                    product.ProductName,
+                    product.BrandId,
+                    product.CategoryId,
+                    product.Picture,
+                    product.Quantity,
+                    product.Price,
+                    product.Discount
+                );
+
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View();
+
         }
 
         // GET: ProductController/Edit/5
         public ActionResult Edit(int id)
         {
+         
             Product product = _productService.GetProductById(id);
-            if(product == null)
+
+           
+            if (product == null)
             {
-                return NotFound();
+                return NotFound(); 
             }
 
+          
             ProductEditVM updatedProduct = new ProductEditVM()
             {
                 Id = product.Id,
                 ProductName = product.ProductName,
                 BrandId = product.BrandId,
-                CategoryId = product.CategoryId,
+                CategoryId = product.CategoryId,              
                 Picture = product.Picture,
                 Quantity = product.Quantity,
                 Price = product.Price,
                 Discount = product.Discount
             };
-            updatedProduct.Brands = _brandService.GetBrands()
-            .Select(b => new BrandPairVM()
-            {
-                Id = b.Id,
-                Name = b.BrandName
-            }).ToList();
-
-            updatedProduct.Categories = _categoryService.GetCategories()
-                .Select(c => new CategoryPairVM()
+            updatedProduct.Brands= _brandService.GetBrands()
+                .Select(b => new BrandPairVM()
                 {
-                    Id = c.Id,
-                    Name = c.CategoryName
-                }).ToList();
+                    Id=b.Id,
+                    Name=b.BrandName
+                })
+                .ToList();
+            updatedProduct.Categories= _categoryService.GetCategories()
+               .Select(b => new CategoryPairVM()
+               {
+                   Id = b.Id,
+                   Name = b.CategoryName
+               })
+               .ToList();
+
+
+
             return View(updatedProduct);
         }
+
 
         // POST: ProductController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(int id, ProductEditVM product)
         {
-            {
-                if(ModelState.IsValid)
+            if(ModelState.IsValid)
+            { 
+                var updated = _productService.Update(id, product.ProductName, product.BrandId, product.CategoryId, product.Picture, product.Quantity, product.Price, product.Discount); 
+                if(updated)
                 {
-                    var updated = _productService.Update(id, product.ProductName, product.BrandId, product.CategoryId, product.Picture, product.Quantity, product.Price, product.Discount);
-                    if(updated)
-                    {
-                        return this.RedirectToAction("Index");
-                    }
+                    return this.RedirectToAction("Index"); 
                 }
-                return View(product);
+
             }
+            return View(product);
         }
 
         // GET: ProductController/Delete/5
         public ActionResult Delete(int id)
         {
             Product item = _productService.GetProductById(id);
-            if(item == null) 
+
+
+            if (item == null)
             {
                 return NotFound();
             }
+
+
             ProductDeleteVM product = new ProductDeleteVM()
             {
                 Id = item.Id,
@@ -173,21 +222,21 @@ namespace WebShop2024.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)
         {
-            var deleted = _productService.RemoveById(id);
-
-            if(deleted)
+           var deleted = _productService.RemoveById(id);
+            if(deleted) 
             {
                 return this.RedirectToAction("Success");
             }
             else
             {
-                return View(); 
-            }
-        }
+                return View();
 
+            }
+           
+        }
         public IActionResult Success()
-        {
-            return View();
+        { 
+            return View(); 
         }
     }
 }
